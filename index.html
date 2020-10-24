@@ -18,14 +18,28 @@ function normalizeRadian(th, from = -Math.PI) {
 function thetaDiff(t1, t2) {
   return normalizeRadian(t2 - t1)
 }
-function curveToSegments(p1, p2) {
+function curveToSegments(p1, p2, recursive = true) {
   const cos1 = Math.cos(p1.th)
   const sin1 = Math.sin(p1.th)
   const cos2 = Math.cos(p2.th)
   const sin2 = Math.sin(p2.th)
   const th = Math.atan2(p2.y - p1.y, p2.x - p1.x)
+  const length = Math.hypot(p2.x - p1.x, p2.y - p1.y)
   const thDiff = normalizeRadian(p2.th - p1.th)
-  const [la, lb] = solve(cos1, cos2, sin1, sin2, p2.x - p1.x, p2.y - p1.y)
+  if (Math.max(Math.abs(normalizeRadian(p2.th - th)), Math.abs(normalizeRadian(p1.th - th))) < 1e-5) {
+    return [[{ ...p1, length }], []]
+  }
+  let [la, lb] = solve(cos1, cos2, sin1, sin2, p2.x - p1.x, p2.y - p1.y)
+  if (la < length / 8 || lb < length / 8 && recursive) {
+    const a = { x: p1.x + cos1 * length / 3, y: p1.y + sin1 * length / 3 }
+    const b = { x: p2.x - cos2 * length / 3, y: p2.y - sin2 * length / 3 }
+    const th2 = Math.atan2(b.y - a.y, b.x - a.x)
+    const center = { x: (a.x + b.x) / 2, y: (a.y + b.y) / 2, th: th2 }
+    const [ls1, cs1] = curveToSegments(p1, center, false)
+    const [ls2, cs2] = curveToSegments(center, p2, false)
+    return [[...ls1, ...ls2], [...cs1, ...cs2]]
+  }
+  if (la < 0 || lb < 0) return [[{ ...p1, length }], []]
   const r = Math.min(la, lb) * Math.tan((Math.PI - Math.abs(thDiff)) / 2)
   const base = la < lb ? p1 : p2
   const dir = thDiff > 0 ? 1 : -1
@@ -42,7 +56,7 @@ function curveToSegments(p1, p2) {
     circles.push({ ...circle, thStart, thEnd: t2 })
     thStart = t2
   }
-  return [line, circles]
+  return [[line], circles]
 }
 function addCSSElement(base, before) {
   const el = document.createElement('i')
@@ -115,7 +129,7 @@ function addLine({ x, y, length, th }, w){
   )
 }
 function curve(p1, p2, w) {
-  const [line, circles] = curveToSegments(p1, p2)
+  const [lines, circles] = curveToSegments(p1, p2)
   const l = Math.hypot(p2.x - p1.x, p2.y - p1.y)
   const g = canvas.getContext('2d')
   g.save()
@@ -133,13 +147,15 @@ function curve(p1, p2, w) {
     g.stroke()
     g.beginPath()
   })
-  g.strokeStyle='green'
-  g.moveTo(line.x, line.y)
-  g.lineTo(line.x + line.length * Math.cos(line.th), line.y + line.length * Math.sin(line.th))
-  g.stroke()
+  lines.forEach(line => {
+    g.strokeStyle='green'
+    g.moveTo(line.x, line.y)
+    g.lineTo(line.x + line.length * Math.cos(line.th), line.y + line.length * Math.sin(line.th))
+    g.stroke()
+  })
   g.restore()
   circles.forEach(circle => addCircle(circle, w))
-  addLine(line, w)
+  lines.forEach(line => addLine(line, w))
   addLineCap(p1, w)
   addLineCap(p2, w)
 }
@@ -148,6 +164,7 @@ function curve(p1, p2, w) {
 const lineWidth = 10
 curve({ x: 40, y: 40, th: 0.1 }, { x: 200, y: 200, th: 1 }, lineWidth)
 curve({ x: 100, y: 20, th: 0.5 }, { x: 200, y: 200, th: 2 }, lineWidth)
+curve({ x: 20, y: 300, th: 0.5 }, { x: 200, y: 300, th: 0.2 }, lineWidth)
 
 const style = document.createElement('style')
 const baseStyles = `
