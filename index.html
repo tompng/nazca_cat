@@ -1,0 +1,98 @@
+<body>
+<script>
+
+const css = []
+const divs = []
+
+function solve(a, b, c, d, x, y) {
+  const det = a * d - b * c
+  return [(d * x - b * y) / det, (a * y - c * x) / det]
+}
+const canvas = document.createElement('canvas')
+canvas.width = canvas.height = 1024
+document.body.appendChild(canvas)
+function normalizeRadian(th, from = -Math.PI) {
+  return th - Math.floor((th - from) / 2 / Math.PI) * 2 * Math.PI
+}
+function thetaDiff(t1, t2) {
+  return normalizeRadian(t2 - t1)
+}
+function curveToSegments(p1, p2) {
+  const cos1 = Math.cos(p1.th)
+  const sin1 = Math.sin(p1.th)
+  const cos2 = Math.cos(p2.th)
+  const sin2 = Math.sin(p2.th)
+  const th = Math.atan2(p2.y - p1.y, p2.x - p1.x)
+  const thDiff = normalizeRadian(p2.th - p1.th)
+  const [la, lb] = solve(cos1, cos2, sin1, sin2, p2.x - p1.x, p2.y - p1.y)
+  const r = Math.min(la, lb) * Math.tan((Math.PI - Math.abs(thDiff)) / 2)
+  const base = la < lb ? p1 : p2
+  const dir = thDiff > 0 ? 1 : -1
+  const cx = base.x - r * dir * Math.sin(base.th)
+  const cy = base.y + r * dir * Math.cos(base.th)
+  let thStart = normalizeRadian(base.th - dir * Math.PI / 2)
+  let thEnd = thStart + (la < lb ? 1 : -1) * thDiff
+  if (thStart > thEnd) [thStart, thEnd] = [thEnd, thStart]
+  const circle = { x: cx, y: cy, r }
+  const line = { ...(la < lb ? p2 : p1), length: la - lb }
+  const circles = []
+  while (thStart < thEnd) {
+    const t2 = Math.min(thEnd, (Math.floor(thStart / (Math.PI / 2)) + 1)* Math.PI / 2)
+    circles.push({ ...circle, thStart, thEnd: t2 })
+    thStart = t2
+  }
+  return [line, circles]
+}
+
+function curve(p1, p2, w) {
+  const [line, circles] = curveToSegments(p1, p2)
+  const l = Math.hypot(p2.x - p1.x, p2.y - p1.y)
+  const g = canvas.getContext('2d')
+  g.save()
+  g.beginPath()
+  g.moveTo(p1.x, p1.y)
+  g.bezierCurveTo(p1.x + l * Math.cos(p1.th) / 3, p1.y + l * Math.sin(p1.th) / 3, p2.x - l * Math.cos(p2.th) / 3, p2.y - l * Math.sin(p2.th) / 3, p2.x, p2.y)
+  g.stroke()
+  
+  
+  g.globalAlpha = 0.5
+  g.lineWidth = 10
+  circles.forEach((circle, i) => {
+    g.globalAlpha = 0.5
+    g.strokeStyle = ['red', 'blue'][i%2]
+    g.beginPath()
+    g.arc(circle.x, circle.y, circle.r, circle.thStart, circle.thEnd, circle.dir < 0)
+    g.stroke()
+    g.beginPath()
+  })
+  g.strokeStyle='green'
+  g.moveTo(line.x, line.y)
+  g.lineTo(line.x + line.length * Math.cos(line.th), line.y + line.length * Math.sin(line.th))
+  g.stroke()
+  g.restore()
+  const cos45 = 1 / Math.sqrt(2)
+  const id = `d${divs.length}`
+  divs.push(`<div id="${id}"></div>`)
+  const selector = `#${id}`
+
+
+  css.push(
+    `${selector}{
+      overflow:hidden;
+      position:absolute;
+
+      
+    }`
+
+  )
+}
+
+
+
+curve({ x: 40, y: 40, th: 0.1 }, { x: 200, y: 200, th: 1 }, 10)
+
+
+curve({ x: 100, y: 20, th: 0.5 }, { x: 200, y: 200, th: 2 }, 10)
+
+
+</script>
