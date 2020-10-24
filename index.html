@@ -1,7 +1,7 @@
 <body>
 <script>
 
-const css = []
+const styles = []
 const divs = []
 
 function solve(a, b, c, d, x, y) {
@@ -9,8 +9,9 @@ function solve(a, b, c, d, x, y) {
   return [(d * x - b * y) / det, (a * y - c * x) / det]
 }
 const canvas = document.createElement('canvas')
+const div = document.createElement('div')
 canvas.width = canvas.height = 1024
-document.body.appendChild(canvas)
+;[canvas, div].forEach(el => document.body.appendChild(el))
 function normalizeRadian(th, from = -Math.PI) {
   return th - Math.floor((th - from) / 2 / Math.PI) * 2 * Math.PI
 }
@@ -43,7 +44,76 @@ function curveToSegments(p1, p2) {
   }
   return [line, circles]
 }
-
+function addCSSElement(base, before) {
+  const el = document.createElement('i')
+  div.appendChild(el)
+  const selector = `i:nth-child(${div.children.length})`
+  function cssToString(css) {
+    const rules = []
+    for (const key in css) {
+      const value = ['left', 'top', 'width', 'height'].includes(key) ? Math.round(100 * css[key]) / 100 + 'px' : css[key]
+      rules.push(key.replace(/[A-Z]/, v => '-' + v.toLocaleLowerCase()) + ':' + value + ';')
+    }
+    return rules.join('')
+  }
+  styles.push(`${selector}{${cssToString(base)}}`)
+  styles.push(`${selector}:before{${cssToString(before)}}`)
+}
+function addLineCap({ x, y }, w) {
+  addCSSElement(
+    { left: x - w / 2, top: y - w / 2, width: w, height: w },
+    {
+      left: 0, top: 0, width: w, height: w,
+      borderRadius: '50%',
+      border: 'none',
+      background: 'black'
+    }
+  )
+}
+function addCircle({ x, y, r, thStart, thEnd }, w) {
+  const xs = []
+  const ys = []
+  ;[thStart, thEnd].forEach(th => {
+    [-1, 1].forEach(wdir => {
+      xs.push(x + (r + wdir * w / 2) * Math.cos(th))
+      ys.push(y + (r + wdir * w / 2) * Math.sin(th))
+    })
+  })
+  const left = Math.min(...xs)
+  const top = Math.min(...ys)
+  addCSSElement(
+    { left, top, width: Math.max(...xs) - left, height: Math.max(...ys) - top },
+    { left: x - left - r - w / 2, top: y - top - r - w / 2, width: 2 * r + w, height: 2 * r + w, borderRadius: '50%' }
+  )
+}
+function addLine({ x, y, length, th }, w){
+  const xs = []
+  const ys = []
+  const cos = Math.cos(th)
+  const sin = Math.sin(th)
+  ;[0, 1].forEach(t => {
+    [-1, 1].forEach(wdir => {
+      xs.push(x + t * length * cos + wdir * w / 2 * sin)
+      ys.push(y + t * length * sin - wdir * w / 2 * cos)
+    })
+  })
+  const left = Math.min(...xs)
+  const top = Math.min(...ys)
+  const center = { x: x + cos * length / 2, y: y + sin * length / 2 }
+  const width = Math.abs(length) + w
+  addCSSElement(
+    { left, top, width: Math.max(...xs) - left, height: Math.max(...ys) - top },
+    {
+      left: center.x - left - width / 2,
+      top: center.y - top - w / 2,
+      width,
+      height: w,
+      transform: `rotate(${Math.round(th * 180 / Math.PI * 100) / 100}deg)`,
+      background: 'black',
+      border: 'none',
+    }
+  )
+}
 function curve(p1, p2, w) {
   const [line, circles] = curveToSegments(p1, p2)
   const l = Math.hypot(p2.x - p1.x, p2.y - p1.y)
@@ -53,8 +123,6 @@ function curve(p1, p2, w) {
   g.moveTo(p1.x, p1.y)
   g.bezierCurveTo(p1.x + l * Math.cos(p1.th) / 3, p1.y + l * Math.sin(p1.th) / 3, p2.x - l * Math.cos(p2.th) / 3, p2.y - l * Math.sin(p2.th) / 3, p2.x, p2.y)
   g.stroke()
-  
-  
   g.globalAlpha = 0.5
   g.lineWidth = 10
   circles.forEach((circle, i) => {
@@ -70,29 +138,26 @@ function curve(p1, p2, w) {
   g.lineTo(line.x + line.length * Math.cos(line.th), line.y + line.length * Math.sin(line.th))
   g.stroke()
   g.restore()
-  const cos45 = 1 / Math.sqrt(2)
-  const id = `d${divs.length}`
-  divs.push(`<div id="${id}"></div>`)
-  const selector = `#${id}`
-
-
-  css.push(
-    `${selector}{
-      overflow:hidden;
-      position:absolute;
-
-      
-    }`
-
-  )
+  circles.forEach(circle => addCircle(circle, w))
+  addLine(line, w)
+  addLineCap(p1, w)
+  addLineCap(p2, w)
 }
 
 
+const lineWidth = 10
+curve({ x: 40, y: 40, th: 0.1 }, { x: 200, y: 200, th: 1 }, lineWidth)
+curve({ x: 100, y: 20, th: 0.5 }, { x: 200, y: 200, th: 2 }, lineWidth)
 
-curve({ x: 40, y: 40, th: 0.1 }, { x: 200, y: 200, th: 1 }, 10)
-
-
-curve({ x: 100, y: 20, th: 0.5 }, { x: 200, y: 200, th: 2 }, 10)
+const style = document.createElement('style')
+const baseStyles = `
+div,canvas{position:absolute;left:0;top:0}
+div{position:absolute;box-shadow:0 0 1px red;}
+i{position:absolute;overflow:hidden;box-shadow:0 0 1px black;}
+i:before{content:'';position:absolute;box-sizing:border-box;border:${lineWidth}px solid black;transform-origin: center;}
+`
+style.textContent = baseStyles + '\n' + styles.join('\n')
+document.head.appendChild(style)
 
 
 </script>
