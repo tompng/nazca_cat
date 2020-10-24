@@ -18,6 +18,16 @@ function normalizeRadian(th, from = -Math.PI) {
 function thetaDiff(t1, t2) {
   return normalizeRadian(t2 - t1)
 }
+function splitCircle({ x, y, r, thStart, thEnd }) {
+  if (thStart > thEnd) [thStart, thEnd] = [thEnd, thStart]
+  const circles = []
+  while (thStart < thEnd) {
+    const t2 = Math.min(thEnd, (Math.floor(thStart / (Math.PI / 2)) + 1)* Math.PI / 2)
+    circles.push({ x, y, r, thStart, thEnd: t2 })
+    thStart = t2
+  }
+  return circles
+}
 function curveToSegments(p1, p2, recursive = true) {
   const cos1 = Math.cos(p1.th)
   const sin1 = Math.sin(p1.th)
@@ -47,15 +57,8 @@ function curveToSegments(p1, p2, recursive = true) {
   const cy = base.y + r * dir * Math.cos(base.th)
   let thStart = normalizeRadian(base.th - dir * Math.PI / 2)
   let thEnd = thStart + (la < lb ? 1 : -1) * thDiff
-  if (thStart > thEnd) [thStart, thEnd] = [thEnd, thStart]
-  const circle = { x: cx, y: cy, r }
   const line = { ...(la < lb ? p2 : p1), length: la - lb }
-  const circles = []
-  while (thStart < thEnd) {
-    const t2 = Math.min(thEnd, (Math.floor(thStart / (Math.PI / 2)) + 1)* Math.PI / 2)
-    circles.push({ ...circle, thStart, thEnd: t2 })
-    thStart = t2
-  }
+  const circles = splitCircle({ x: cx, y: cy, r, thStart, thEnd })
   return [[line], circles]
 }
 function addCSSElement(base, before) {
