@@ -65,7 +65,7 @@ function addCSSElement(base, before) {
   function cssToString(css) {
     const rules = []
     for (const key in css) {
-      const value = ['left', 'top', 'width', 'height'].includes(key) ? Math.round(100 * css[key]) / 100 + 'px' : css[key]
+      const value = ['left', 'top', 'width', 'height'].includes(key) ? round(css[key]) + 'px' : css[key]
       rules.push(key.replace(/[A-Z]/, v => '-' + v.toLocaleLowerCase()) + ':' + value + ';')
     }
     return rules.join('')
@@ -74,17 +74,23 @@ function addCSSElement(base, before) {
   styles.push(`${selector}:before{${cssToString(before)}}`)
 }
 function addLineCap({ x, y }, w) {
+  const lx = x - w / 2
+  const ly = y - w / 2
   addCSSElement(
-    { left: x - w / 2, top: y - w / 2, width: w, height: w },
+    { left: Math.floor(lx), top: Math.floor(ly), width: w + 1, height: w + 1 },
     {
       left: 0, top: 0, width: w, height: w,
       borderRadius: '50%',
+      transform: `translate(${lx - Math.floor(lx)}px,${ly - Math.floor(ly)}px)`,
       border: 'none',
       background: 'black'
     }
   )
 }
-function addCircle({ x, y, r, thStart, thEnd }, w) {
+function round(v, n = 100) {
+  return Math.round(v * n) / n
+}
+function addArc({ x, y, r, thStart, thEnd }, w) {
   const xs = []
   const ys = []
   ;[thStart, thEnd].forEach(th => {
@@ -93,11 +99,21 @@ function addCircle({ x, y, r, thStart, thEnd }, w) {
       ys.push(y + (r + wdir * w / 2) * Math.sin(th))
     })
   })
-  const left = Math.min(...xs)
-  const top = Math.min(...ys)
+  const left = Math.floor(Math.min(...xs))
+  const top = Math.floor(Math.min(...ys))
+  const cx = x - left - r - w / 2
+  const cy = y - top - r - w / 2
+  const csize = 2 * r + w
+  const icx = Math.floor(cx)
+  const icy = Math.floor(cy)
+  const icsize = Math.floor(csize)
   addCSSElement(
-    { left, top, width: Math.max(...xs) - left, height: Math.max(...ys) - top },
-    { left: x - left - r - w / 2, top: y - top - r - w / 2, width: 2 * r + w, height: 2 * r + w, borderRadius: '50%' }
+    { left, top, width: Math.ceil(Math.max(...xs) - left), height: Math.ceil(Math.max(...ys) - top) },
+    {
+      left: icx, top: icy, width: icsize, height: icsize,
+      transform: `translate(${round(cx - icx + (csize - icsize) / 2)}px,${round(cy - icy + (csize - icsize) / 2)}px)scale(${round(csize / icsize, 10000)})`,
+      borderRadius: '50%',
+    }
   )
 }
 function addLine({ x, y, length, th }, w){
@@ -111,18 +127,20 @@ function addLine({ x, y, length, th }, w){
       ys.push(y + t * length * sin - wdir * w / 2 * cos)
     })
   })
-  const left = Math.min(...xs)
-  const top = Math.min(...ys)
+  const left = Math.floor(Math.min(...xs))
+  const top = Math.floor(Math.min(...ys))
   const center = { x: x + cos * length / 2, y: y + sin * length / 2 }
-  const width = Math.abs(length) + w
+  const width = Math.ceil(Math.abs(length) + w)
+  const lx = center.x - left - width / 2
+  const ly = center.y - top - w / 2
   addCSSElement(
-    { left, top, width: Math.max(...xs) - left, height: Math.max(...ys) - top },
+    { left, top, width: Math.ceil(Math.max(...xs) - left), height: Math.ceil(Math.max(...ys) - top) },
     {
-      left: center.x - left - width / 2,
-      top: center.y - top - w / 2,
+      left: Math.floor(lx),
+      top: Math.floor(ly),
       width,
       height: w,
-      transform: `rotate(${Math.round(th * 180 / Math.PI * 100) / 100}deg)`,
+      transform: `translate(${round(lx - Math.floor(lx))}px,${round(ly - Math.floor(ly))}px)rotate(${round(th * 180 / Math.PI, 1000)}deg)`,
       background: 'black',
       border: 'none',
     }
@@ -154,23 +172,62 @@ function curve(p1, p2, w) {
     g.stroke()
   })
   g.restore()
-  circles.forEach(circle => addCircle(circle, w))
+  circles.forEach(circle => addArc(circle, w))
   lines.forEach(line => addLine(line, w))
   addLineCap(p1, w)
   addLineCap(p2, w)
 }
 
+function addPath(points, w, closed = false) {
+  const size = points.length
+  var params = points.map(({ x, y }) => ({ x, y, dx: 0, dy: 0 }))
+  for (let n = 0; n < 4; n++) {
+    for (let i = 0; i < size; i++) {
+      let ia = (i - 1 + size) % size
+      let ib = (i + 1) % size
+      let k = 4
+      if (!closed) {
+        if (i === 0) { ia = i; k = 2 }
+        if (i === size - 1) { ib = i; k = 2 }
+      }
+      const cx = 3 * (params[ib].x - params[ia].x)
+      const cy = 3 * (params[ib].y - params[ia].y)
+      const pa = params[ia]
+      const pb = params[ib]
+      params[i].dx = (cx - pa.dx - pb.dx) / k
+      params[i].dy = (cy - pa.dy - pb.dy) / k
+    }
+  }
+  console.log(params)
+  const pointsWithTheta = params.map(({ x, y, dx, dy }) => ({ x, y, th: Math.atan2(dy, dx) }))
+  for (let i = 0; i < size - (closed ? 0 : 1); i++) {
+    const a = pointsWithTheta[i]
+    const b = pointsWithTheta[(i + 1) % size]
+    const [lines, circles] = curveToSegments(a, b)
+    console.log(a, b, circles, lines)
+    circles.forEach(c => addArc(c, w))
+    lines.forEach(l => addLine(l, w)) // TODO: line merge
+  }
+  if (!closed) {
+    addLineCap(points[0], w)
+    addLineCap(points[points.length - 1], w)
+  }
+}
 
 const lineWidth = 10
-curve({ x: 40, y: 40, th: 0.1 }, { x: 200, y: 200, th: 1 }, lineWidth)
-curve({ x: 100, y: 20, th: 0.5 }, { x: 200, y: 200, th: 2 }, lineWidth)
-curve({ x: 20, y: 300, th: 0.5 }, { x: 200, y: 300, th: 0.2 }, lineWidth)
+const points = []
+for (i = 0; i < 5; i++) {
+  const r = 100 + 200 * Math.random()
+  const th = 2 * Math.PI * i / 5
+  points.push({ x: 300 + r * Math.cos(th), y: 300 + r * Math.sin(th) })
+}
+addPath(points, lineWidth)
 
 const style = document.createElement('style')
 const baseStyles = `
 div,canvas{position:absolute;left:0;top:0}
-div{position:absolute;box-shadow:0 0 1px red;}
-i{position:absolute;overflow:hidden;box-shadow:0 0 1px black;}
+div{position:absolute;}
+i{position:absolute;overflow:hidden;}
 i:before{content:'';position:absolute;box-sizing:border-box;border:${lineWidth}px solid black;transform-origin: center;}
 `
 style.textContent = baseStyles + '\n' + styles.join('\n')
