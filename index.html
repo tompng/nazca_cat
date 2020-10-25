@@ -1,4 +1,12 @@
 <body>
+<style>
+  body{
+    background-image: url(nazca.png);
+    background-size: 1024px;
+    background-repeat: no-repeat;
+  }
+
+</style>
 <script>
 
 const styles = []
@@ -86,7 +94,7 @@ function addLineCap({ x, y }, w) {
       borderRadius: '50%',
       transform: `translate(${lx - Math.floor(lx)}px,${ly - Math.floor(ly)}px)`,
       border: 'none',
-      background: 'black'
+      background: 'red'
     }
   )
 }
@@ -115,6 +123,7 @@ function addArc({ x, y, r, thStart, thEnd }, w) {
     {
       left: icx, top: icy, width: icsize, height: icsize,
       transform: `translate(${round(cx - icx + (csize - icsize) / 2)}px,${round(cy - icy + (csize - icsize) / 2)}px)scale(${round(csize / icsize, 10000)})`,
+      borderWidth: `${w}px`,
       borderRadius: '50%',
     }
   )
@@ -144,41 +153,10 @@ function addLine({ x, y, length, th }, w){
       width,
       height: w,
       transform: `translate(${round(lx - Math.floor(lx))}px,${round(ly - Math.floor(ly))}px)rotate(${round(th * 180 / Math.PI, 1000)}deg)`,
-      background: 'black',
+      background: 'red',
       border: 'none',
     }
   )
-}
-function curve(p1, p2, w) {
-  const [lines, circles] = curveToSegments(p1, p2)
-  const l = Math.hypot(p2.x - p1.x, p2.y - p1.y)
-  const g = canvas.getContext('2d')
-  g.save()
-  g.beginPath()
-  g.moveTo(p1.x, p1.y)
-  g.bezierCurveTo(p1.x + l * Math.cos(p1.th) / 3, p1.y + l * Math.sin(p1.th) / 3, p2.x - l * Math.cos(p2.th) / 3, p2.y - l * Math.sin(p2.th) / 3, p2.x, p2.y)
-  g.stroke()
-  g.globalAlpha = 0.5
-  g.lineWidth = 10
-  circles.forEach((circle, i) => {
-    g.globalAlpha = 0.5
-    g.strokeStyle = ['red', 'blue'][i%2]
-    g.beginPath()
-    g.arc(circle.x, circle.y, circle.r, circle.thStart, circle.thEnd, circle.dir < 0)
-    g.stroke()
-    g.beginPath()
-  })
-  lines.forEach(line => {
-    g.strokeStyle='green'
-    g.moveTo(line.x, line.y)
-    g.lineTo(line.x + line.length * Math.cos(line.th), line.y + line.length * Math.sin(line.th))
-    g.stroke()
-  })
-  g.restore()
-  circles.forEach(circle => addArc(circle, w))
-  lines.forEach(line => addLine(line, w))
-  addLineCap(p1, w)
-  addLineCap(p2, w)
 }
 
 function addPath(points, w, closed = false) {
@@ -201,7 +179,6 @@ function addPath(points, w, closed = false) {
       params[i].dy = (cy - pa.dy - pb.dy) / k
     }
   }
-  console.log(params)
   const pointsWithTheta = params.map(({ x, y, dx, dy }) => ({ x, y, th: Math.atan2(dy, dx) }))
   for (let i = 0; i < size - (closed ? 0 : 1); i++) {
     const a = pointsWithTheta[i]
@@ -217,24 +194,44 @@ function addPath(points, w, closed = false) {
   }
 }
 
-const lineWidth = 10
-const points = []
-for (i = 0; i < 5; i++) {
-  const r = 100 + 200 * Math.random()
-  const th = 2 * Math.PI * i / 5
-  points.push({ x: 300 + r * Math.cos(th), y: 300 + r * Math.sin(th) })
+const lineWidth = 16
+
+
+addPath([{x:629,y:380},{x:530,y:434},{x:660,y:464},{x:703,y:364}],lineWidth,true)
+addPath([{x:734,y:399},{x:726,y:482},{x:671,y:540},{x:711,y:563},{x:768,y:492}],lineWidth)
+addPath([{x:823,y:441},{x:820,y:495},{x:791,y:538}],lineWidth)
+addPath([{x:764,y:324},{x:785,y:353},{x:828,y:335},{x:819,y:307}],lineWidth,true)
+addPath([{x:771,y:203},{x:740,y:228},{x:773,y:247},{x:794,y:225}],lineWidth,true)
+addPath([{x:848,y:212},{x:820,y:233},{x:837,y:255},{x:868,y:236}],lineWidth,true)
+addPath([{x:83,y:450},{x:116,y:452},{x:176,y:413},{x:201,y:434}],lineWidth*5/8)
+addPath([{x:118,y:460},{x:110,y:480}],lineWidth*5/8)
+addPath([{x:148,y:447},{x:140,y:461}],lineWidth*5/8)
+addPath([{x:160,y:453},{x:164,y:432}],lineWidth*5/8)
+addPath([{x:182,y:431},{x:180,y:450}],lineWidth*5/8)
+addPath([{x:398,y:470},{x:475,y:450},{x:494,y:390},{x:390,y:373},{x:368,y:476},{x:353,y:589},{x:453,y:708},{x:530,y:635},{x:463,y:562}],lineWidth)
+addPath([{x:275,y:529},{x:257,y:606},{x:294,y:685}],lineWidth)
+addPath([{x:182,y:516},{x:105,y:615}],lineWidth)
+addPath([{x:258,y:512},{x:129,y:494},{x:47,y:514},{x:82,y:421},{x:238,y:357},{x:394,y:293},{x:532,y:297},{x:592,y:240},{x:671,y:240}],lineWidth)
+addPath([{x:782,y:106},{x:831,y:104},{x:869,y:42},{x:899,y:46},{x:893,y:201},{x:920,y:299},{x:867,y:399},{x:735,y:367},{x:682,y:275},{x:699,y:190},{x:695,y:45},{x:728,y:32}],lineWidth,true)
+const arr = []
+document.body.onclick=e=>{
+  const p = { x: e.pageX, y: e.pageY }
+  arr.push(p)
+  console.log(JSON.stringify(arr).replace(/"/g,''))
+  addLineCap(p, lineWidth)
+  applyStyles()
 }
-addPath(points, lineWidth)
 
 const style = document.createElement('style')
-const baseStyles = `
-div,canvas{position:absolute;left:0;top:0}
-div{position:absolute;}
-i{position:absolute;overflow:hidden;}
-i:before{content:'';position:absolute;box-sizing:border-box;border:${lineWidth}px solid black;transform-origin: center;}
-`
-style.textContent = baseStyles + '\n' + styles.join('\n')
-document.head.appendChild(style)
-
-
+function applyStyles() {
+  const baseStyles = `
+  div,canvas{position:absolute;left:0;top:0}
+  div{position:absolute;}
+  i{position:absolute;overflow:hidden;}
+  i:before{content:'';position:absolute;box-sizing:border-box;border:0px solid red;transform-origin: center;}
+  `
+  style.textContent = baseStyles + '\n' + styles.join('\n')
+  document.body.appendChild(style)
+}
+applyStyles()
 </script>
