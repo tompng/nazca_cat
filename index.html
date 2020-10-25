@@ -223,7 +223,32 @@ function addArc({ x, y, r, thStart, thEnd }, w) {
     }
   )
 }
-function addLine({ x, y, length, th }, w){
+function addLineWithCap({ x, y, length, th }, w){
+  const cos = Math.cos(th)
+  const sin = Math.sin(th)
+  const xs = [x, x + length * cos]
+  const ys = [y, y + length * sin]
+  const left = Math.floor(Math.min(...xs) - w / 2)
+  const top = Math.floor(Math.min(...ys) - w / 2)
+  const center = { x: x + cos * length / 2, y: y + sin * length / 2 }
+  const width = Math.ceil(Math.abs(length) + w)
+  const lx = center.x - left - width / 2
+  const ly = center.y - top - w / 2
+  addCSSElement(
+    { left, top, width: Math.ceil(Math.max(...xs) + w - left), height: Math.ceil(Math.max(...ys) + w - top) },
+    {
+      left: Math.floor(lx),
+      top: Math.floor(ly),
+      width,
+      height: w,
+      borderRadius: `${w / 2}px`,
+      transform: `translate(${round(lx - Math.floor(lx))}px,${round(ly - Math.floor(ly))}px)rotate(${round(th * 180 / Math.PI, 1000)}deg)`,
+      background: 'red',
+      border: 'none',
+    }
+  )
+}
+function addLine({ x, y, length, th }, w, cap = false){
   const xs = []
   const ys = []
   const cos = Math.cos(th)
@@ -255,6 +280,12 @@ function addLine({ x, y, length, th }, w){
 }
 
 function addPath(points, w, closed = false) {
+  if (points.length === 2) {
+    const dx = points[1].x - points[0].x
+    const dy = points[1].y - points[0].y
+    addLineWithCap({ ...points[0], length: Math.hypot(dx, dy), th: Math.atan2(dy, dx) }, w)
+    return
+  }
   const size = points.length
   var params = points.map(({ x, y }) => ({ x, y, dx: 0, dy: 0 }))
   for (let n = 0; n < 4; n++) {
