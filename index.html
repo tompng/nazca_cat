@@ -55,7 +55,6 @@ function curveToArcs(p1, p2) {
     const b = -s1 * (1 - c2)
     const r1 = length * b / (a + b) / s1
     const r2 = -length * a / (a + b) / s2
-    console.log(r1, r2)
     return [
       {
         x: p1.x + r1 * sin1,
@@ -98,7 +97,6 @@ function curveToArcs(p1, p2) {
   const circle1 = { x: p1.x - r * sin1, y: p1.y + r * cos1, r: Math.abs(r) }
   const circle2 = { x: p2.x + r * sin2, y: p2.y - r * cos2, r: Math.abs(r) }
   const th2 = Math.atan2(circle2.y - circle1.y, circle2.x - circle1.x)
-  console.log(circle1, circle2, r)
   return [
     {
       ...circle1,
@@ -274,7 +272,7 @@ function addLineWithCap({ x, y, length, th }, w){
     const y = ys[i]
     addCircleBackground(x - w / 2, y - w / 2, w, w, x, y, w / 2)
   })
-  addLineBackground(x, y, length, th)
+  addLineBackground(x, y, length, th, w)
 }
 function addLine({ x, y, length, th }, w, cap = false){
   const xs = []
@@ -305,10 +303,42 @@ function addLine({ x, y, length, th }, w, cap = false){
       border: 'none',
     }
   )
-  addLineBackground(x, y, length, th)
+  addLineBackground(x, y, length, th, w)
 }
-function addLineBackground(x, y, length, th) {
-  // TODO
+function addLineBackground(x, y, length, th, w) {
+  const xs = []
+  const ys = []
+  const cos = Math.cos(th)
+  const sin = Math.sin(th)
+  ;[0, 1].forEach(t => {
+    [-1, 1].forEach(wdir => {
+      xs.push(x + t * length * cos + wdir * w / 2 * sin)
+      ys.push(y + t * length * sin - wdir * w / 2 * cos)
+    })
+  })
+  const left = Math.floor(Math.min(...xs))
+  const top = Math.floor(Math.min(...ys))
+  const right = Math.ceil(Math.max(...xs))
+  const bottom = Math.ceil(Math.max(...ys))
+  const center = { x: x + cos * length / 2, y: y + sin * length / 2 }
+  const width = Math.ceil(Math.abs(length) + w)
+  const lx = center.x - left - width / 2
+  const ly = center.y - top - w / 2
+
+  const pxs = []
+  ;[left, right].forEach(px => {
+    ;[top, bottom].forEach(py => {
+      pxs.push((py - y) * cos - (px - x) * sin)
+    })
+  })
+  const stops = [-w / 2, w / 2]
+  const min = Math.min(...pxs)
+  const max = Math.max(...pxs)
+  const stop1 = -w / 2 - min
+  const stop2 = w / 2 - min
+  const d = 0.25
+  const color = `transparent ${round(stop1 - d)}px,blue ${round(stop1 + d)}px,blue ${round(stop2 - d)}px,transparent ${round(stop2 + d)}px`
+  backgrounds.push(`linear-gradient(${round((th * 180 / Math.PI))}deg,${color}) ${left}px ${top}px/${right - left}px ${bottom - top}px no-repeat`)
 }
 function addPath(points, w, closed = false) {
   if (points.length === 2) {
