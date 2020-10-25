@@ -8,6 +8,7 @@ body{
 <script>
 
 const styles = []
+const backgrounds = []
 const divs = []
 
 function solve(a, b, c, d, x, y) {
@@ -188,6 +189,7 @@ function addLineCap({ x, y }, w) {
       background: 'red'
     }
   )
+  addCircleBackground(x - w / 2, y - w / 2, w, w, x, y, w / 2)
 }
 function round(v, n = 100) {
   return Math.round(v * n) / n
@@ -218,6 +220,30 @@ function addArc({ x, y, r, thStart, thEnd }, w) {
       borderRadius: '50%',
     }
   )
+  addCircleBackground(
+    Math.min(...xs),
+    Math.min(...ys),
+    Math.max(...xs) - Math.min(...xs),
+    Math.max(...ys) - Math.min(...ys),
+    x,
+    y,
+    r,
+    w
+  )
+}
+function addCircleBackground(x, y, w, h, cx, cy, r, lw) {
+  const d = 0.25
+  let color = `blue ${round(r - d)}px,transparent ${round(r + d)}px`
+  const ix = Math.floor(x)
+  const iy = Math.floor(y)
+  const iw = Math.ceil(x + w) - ix
+  const ih = Math.ceil(y + h) - iy
+  if (lw !== undefined){
+    const r1 = round(r - lw / 2)
+    const r2 = round(r + lw / 2)
+    color = `transparent ${round(r - lw / 2 - d)}px,blue ${round(r - lw / 2 + d)}px,blue ${round(r + lw / 2 - d)}px,transparent ${round(r + lw / 2 + d)}px`
+  }
+  backgrounds.push(`radial-gradient(circle at ${round(cx-ix)}px ${round(cy-iy)}px,${color}) ${ix}px ${iy}px/${iw}px ${ih}px no-repeat`)
 }
 function addLineWithCap({ x, y, length, th }, w){
   const cos = Math.cos(th)
@@ -243,6 +269,12 @@ function addLineWithCap({ x, y, length, th }, w){
       border: 'none',
     }
   )
+  ;[0, 1].forEach(i => {
+    const x = xs[i]
+    const y = ys[i]
+    addCircleBackground(x - w / 2, y - w / 2, w, w, x, y, w / 2)
+  })
+  addLineBackground(x, y, length, th)
 }
 function addLine({ x, y, length, th }, w, cap = false){
   const xs = []
@@ -273,8 +305,11 @@ function addLine({ x, y, length, th }, w, cap = false){
       border: 'none',
     }
   )
+  addLineBackground(x, y, length, th)
 }
-
+function addLineBackground(x, y, length, th) {
+  // TODO
+}
 function addPath(points, w, closed = false) {
   if (points.length === 2) {
     const dx = points[1].x - points[0].x
@@ -348,7 +383,12 @@ onload = () => {
     i{position:absolute;overflow:hidden;}
     i:before{content:'';position:absolute;box-sizing:border-box;border:0px solid red;transform-origin: center;}
     `
-    style.textContent = baseStyles + '\n' + styles.join('\n')
+    const bgStyles = `
+    body{
+      background:${backgrounds.join(',')};
+    }
+    `
+    style.textContent = baseStyles + '\n' + styles.join('\n') + '\n' + bgStyles
     document.body.appendChild(style)
   }
   applyStyles()
