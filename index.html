@@ -9,7 +9,6 @@ body{
 
 const styles = []
 const backgrounds = []
-const divs = []
 
 function solve(a, b, c, d, x, y) {
   const det = a * d - b * c
@@ -157,12 +156,12 @@ function curveToSegments(p1, p2, recursive = true) {
   const circles = splitCircle({ x: cx, y: cy, r, thStart, thEnd })
   return [[line], circles]
 }
-let elementCount = 0
+let parentSelector = null
 function addCSSElement(base, before) {
   const el = document.createElement('i')
-  document.body.appendChild(el)
-  elementCount++
-  const selector = `i:nth-child(${elementCount})`
+  const parent = document.querySelector(parentSelector || 'body')
+  parent.appendChild(el)
+  const selector = `${parentSelector ? parentSelector + ' ' : ''}i:nth-child(${parent.querySelectorAll('i').length})`
   function cssToString(css) {
     const rules = []
     for (const key in css) {
@@ -380,23 +379,29 @@ function addPath(points, w, closed = false) {
 }
 onload = () => {
   const lineWidth = 16
-
+  parentSelector = '#a'
+  // stomach
   addPath([{x:660,y:360},{x:620,y:380},{x:550,y:390},{x:540,y:450},{x:650,y:464},{x:703,y:364}],lineWidth,true)
+  // front leg
   addPath([{x:734,y:399},{x:726,y:482},{x:671,y:540},{x:711,y:563},{x:768,y:492}],lineWidth)
   addPath([{x:823,y:441},{x:820,y:495},{x:791,y:538}],lineWidth)
+  // face
+  addPath([{x:782,y:106},{x:831,y:104},{x:869,y:42},{x:899,y:46},{x:893,y:201},{x:920,y:299},{x:867,y:399},{x:735,y:367},{x:682,y:275},{x:699,y:190},{x:695,y:45},{x:728,y:32}],lineWidth,true)
   addPath([{x:764,y:324},{x:785,y:353},{x:828,y:335},{x:819,y:307}],lineWidth,true)
   addPath([{x:771,y:203},{x:740,y:228},{x:773,y:247},{x:794,y:225}],lineWidth,true)
   addPath([{x:848,y:212},{x:820,y:233},{x:837,y:255},{x:868,y:236}],lineWidth,true)
+  // tail pattern
   addPath([{x:83,y:450},{x:116,y:452},{x:176,y:413},{x:201,y:434}],lineWidth*5/8)
   addPath([{x:118,y:460},{x:110,y:480}],lineWidth*5/8)
   addPath([{x:148,y:447},{x:140,y:461}],lineWidth*5/8)
   addPath([{x:160,y:453},{x:164,y:432}],lineWidth*5/8)
   addPath([{x:182,y:431},{x:180,y:450}],lineWidth*5/8)
+  // back leg
   addPath([{x:398,y:470},{x:475,y:450},{x:494,y:390},{x:410,y:373},{x:378,y:420},{x:368,y:476},{x:353,y:589},{x:453,y:708},{x:530,y:635},{x:463,y:562}],lineWidth)
   addPath([{x:275,y:529},{x:257,y:606},{x:294,y:685}],lineWidth)
   addPath([{x:182,y:516},{x:139,y:566},{x:105,y:615}],lineWidth)
+  // back
   addPath([{x:258,y:512},{x:129,y:494},{x:47,y:514},{x:82,y:421},{x:238,y:357},{x:394,y:293},{x:532,y:297},{x:592,y:240},{x:671,y:240}],lineWidth)
-  addPath([{x:782,y:106},{x:831,y:104},{x:869,y:42},{x:899,y:46},{x:893,y:201},{x:920,y:299},{x:867,y:399},{x:735,y:367},{x:682,y:275},{x:699,y:190},{x:695,y:45},{x:728,y:32}],lineWidth,true)
 
   const arr = []
   document.body.onclick=e=>{
@@ -414,13 +419,16 @@ onload = () => {
     i:before{content:'';position:absolute;box-sizing:border-box;border:0px solid red;transform-origin: center;}
     `
     const bgStyles = `
-    body{
+    .background{
       background:${backgrounds.join(',')};
     }
     `
     style.textContent = baseStyles + '\n' + styles.join('\n') + '\n' + bgStyles
-    document.body.appendChild(style)
+    document.head.appendChild(style)
   }
   applyStyles()
 }
 </script>
+<div id='a'></div>
+<div id='b'></div>
+<div class='background' style='width:1024px;height:800px;position:absolute;top:800px;'></div>
