@@ -8,6 +8,9 @@ function solve2(a, b, c, d, x, y) {
 }
 
 function polygon(pa, pb, pc, selector) {
+  if ((pb.x - pa.x) * (pc.y - pa.y) - (pb.y - pa.y) * (pc.x - pa.x) < 0) {
+    return polygon(pa, pc, pb, selector)
+  }
   const xs = [pa.x, pb.x, pc.x]
   const ys = [pa.y, pb.y, pc.y]
   const left = Math.floor(Math.min(...xs)) - 1
@@ -45,24 +48,16 @@ function polygon(pa, pb, pc, selector) {
     const ys2 = [0, pb2.y, pc2.y]
     const rect2 = {
       left: Math.floor(Math.min(...xs2)) - 1,
-      right: Math.round(Math.max(...xs2)) + 1,
+      right: Math.ceil(Math.max(...xs2)) + 1,
       top: Math.floor(Math.min(...ys2)) - 1,
-      bottom: Math.round(Math.max(...ys2)) + 1
+      bottom: Math.ceil(Math.max(...ys2)) + 1
     }
-    styles.push(`${selector}>i:nth-child(${2+i}){
-      position:absolute;
-      left:0;
-      top:0;
-      width:${rect2.right - rect2.left}px;
-      height:${rect2.bottom - rect2.top}px;
-      transform:translate(${round(pa.x - left)}px,${round(pa.y - top)}px) rotate(${round(thb * 180 / Math.PI)}deg);
-      transform-origin:0 0;
-    }`)
+    console.log(rect2, pa, pb, pc)
     return {
       w: rect2.right - rect2.left,
       h: rect2.bottom - rect2.top,
       rotate: thb,
-      translate: { x: pa.x - left, y: pa.y - top }
+      translate: { x: pa.x - left + rect2.left * cosb - rect2.top * sinb, y: pa.y - top + rect2.top * cosb + rect2.left * sinb }
     }
   })
 
@@ -109,15 +104,50 @@ function polygon(pa, pb, pc, selector) {
 
 }
 
-polygon(
-  { x: 100, y: 120, z: 100 },
-  { x: 400, y: 210, z: -100 },
-  { x: 150, y: 520, z: 10 },
-  '#polygon>i:nth-child(1)'
-)
-polygon(
-  { x: 150, y: 520, z: 10 },
-  { x: 400, y: 210, z: -100 },
-  { x: 500, y: 400, z: 50 },
-  '#polygon>i:nth-child(2)'
-)
+// polygon(
+//   { x: 100, y: 120, z: 100 },
+//   { x: 400, y: 210, z: 100 },
+//   { x: 150, y: 520, z: 100 },
+//   '#view>i:nth-child(1)'
+// )
+// polygon(
+//   { x: 150, y: 520, z: 100 },
+//   { x: 400, y: 210, z: 100 },
+//   { x: 500, y: 400, z: 100 },
+//   '#view>i:nth-child(2)'
+// )
+
+// polygon(
+//   { x: 200, y: 200, z: 200 },
+//   { x: 400, y: 400, z: 100 },
+//   { x: 400, y: 200, z: 0 },
+//   '#view>i:nth-child(3)'
+// )
+
+
+const outline = [
+  { x: 650, y: 500, z: 0 },
+  { x: 300, y: 500, z: 0 },
+  { x: 0, y: 400, z: 0 },
+  { x: 100, y: 200, z: 0 },
+  { x: 320, y: 20, z: 0 },
+  { x: 700, y: 0, z: 0 },
+  { x: 800, y: 50, z: 0 },
+  { x: 1000, y: 250, z: 0 },
+  { x: 900, y: 450, z: 0 },
+  { x: 615, y: 505, z: 0 }
+]
+const hratio = 3 / 5
+let count = 0
+const stairs = [
+  [{ x: 650, y: 500 }, { x: 670, y: 440 }],
+  [{ x: 680, y: 430 }, { x: 770, y: 400 }],
+  [{ x: 770, y: 400 }, { x: 700, y: 190 }]
+].map(ps => ps.map(({ x, y }) => ({ x, y, z: (500 - y) * hratio })))
+console.log(stairs)
+const center = { x: 250, y: 250, z: 250 * hratio }
+const cs = [stairs[2][1], stairs[1][1], stairs[1][0], stairs[0][1], ...outline.slice(0, 5)]
+for (let i = 0; i < cs.length - 1; i++) {
+  console.log(cs[i], cs[i+1], center)
+  polygon(cs[i], cs[i+1], center, `#view>i:nth-child(${++count})`)
+}
