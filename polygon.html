@@ -1,5 +1,5 @@
 <style>
-.background,#view>i>i>i>i:before,#view>i:before{
+.background,#view>i>i>i>i:before,#view>i>i{
   background:
     radial-gradient(transparent, rgba(0,0,0,0.2), transparent) 0px 0px/83px 67px,
     radial-gradient(transparent, rgba(0,0,0,0.2), transparent) 0px 0px/74px 73px,
@@ -15,27 +15,46 @@
   position:absolute;left:0;top:0;width:1000px;height:600px;
   background-color:gray;
 }
-#view>i:nth-child(19)>i>i>i:before,
-#view>i:nth-child(20)>i>i>i:before,
-#view>i:nth-child(21)>i>i>i:before,
-#view>i:nth-child(22)>i>i>i:before,
-#view>i:nth-child(23)>i>i>i:before,
-#view>i:nth-child(24)>i>i>i:before,
-#view>i:nth-child(25)>i>i>i:before,
-#view>i:nth-child(26)>i>i>i:before{
-  background: radial-gradient(transparent, rgba(0,0,0,0.2), transparent) 0px 0px/91px 79px,silver;
+body{perspective:1000px;}
+#view>i{
+  transform-style: flat;
+  /* background:radial-gradient(red,blue) 0px 0px/32px 32px; */
+  background: #aaa;
+}
+#view>i:nth-child(n+58):nth-child(-n+84){
+  background: #ccc;
 }
 </style>
 <body>
 <script src='polygon.js'></script>
 <!-- <div class='background' style='width:1000px;height:1000px;'></div> -->
 <div id='view' class='background'>
-  <i></i><i></i><i></i><i></i>
-  <i></i><i></i><i></i><i></i>
-  <i></i><i></i><i></i><i></i>
-  <i></i><i></i><i></i><i></i>
-  <i></i><i></i><i></i><i></i>
-  <i></i><i></i><i></i><i></i>
-  <i></i><i></i><i></i><i></i>
-  <i></i><i></i><i></i><i></i>
+  <i></i><i></i><i></i>
+  <i></i><i></i><i></i>
+  <i></i><i></i><i></i>
+  <i></i><i></i><i></i>
+  <i></i><i></i><i></i>
+  <i></i><i></i><i></i>
+  <i></i><i></i><i></i>
+  <i></i><i></i><i></i>
+  <i></i><i></i><i></i>
+  <i></i><i></i><i></i>
+  <i></i><i></i><i></i>
+  <i></i><i></i><i></i>
+  <i></i><i></i><i></i>
+  <i></i><i></i><i></i>
+  <i></i><i></i><i></i>
+  <i></i><i></i><i></i>
+  <i></i><i></i><i></i>
+  <i></i><i></i><i></i>
+  <i></i><i></i><i></i>
+  <i></i><i></i><i></i>
+  <i></i><i></i><i></i>
+  <i></i><i></i><i></i>
+  <i></i><i></i><i></i>
+  <i></i><i></i><i></i>
+  <i></i><i></i><i></i>
+  <i></i><i></i><i></i>
+  <i></i><i></i><i></i>
+  <i></i><i></i><i></i>
 </div>
