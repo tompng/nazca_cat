@@ -13,10 +13,10 @@ function polygon(pa, pb, pc, selector) {
   }
   const xs = [pa.x, pb.x, pc.x]
   const ys = [pa.y, pb.y, pc.y]
-  const left = Math.floor(Math.min(...xs)) - 1
-  const right = Math.ceil(Math.max(...xs)) + 1
-  const top = Math.floor(Math.min(...ys)) - 1
-  const bottom = Math.ceil(Math.max(...ys)) + 1
+  const left = Math.floor(Math.min(...xs))
+  const right = Math.ceil(Math.max(...xs))
+  const top = Math.floor(Math.min(...ys))
+  const bottom = Math.ceil(Math.max(...ys))
 
   const argz = solve2(pb.x - pa.x, pb.y - pa.y, pc.x - pa.x, pc.y - pa.y, pb.z - pa.z, pc.z - pa.z)
   const matrix = [
@@ -43,16 +43,14 @@ function polygon(pa, pb, pc, selector) {
     const cosb = Math.cos(thb)
     const sinb = Math.sin(thb)
     const [pb2, pc2] = [pb, pc].map(({ x, y }) => ({ x: (x - pa.x) * cosb + (y - pa.y) * sinb, y: -(x - pa.x) * sinb + (y - pa.y) * cosb }))
-    console.log(pb2, pc2, matrix)
     const xs2 = [0, pb2.x, pc2.x]
     const ys2 = [0, pb2.y, pc2.y]
     const rect2 = {
-      left: Math.floor(Math.min(...xs2)) - 1,
-      right: Math.ceil(Math.max(...xs2)) + 1,
-      top: Math.floor(Math.min(...ys2)) - 1,
-      bottom: Math.ceil(Math.max(...ys2)) + 1
+      left: Math.floor(Math.min(...xs2)),
+      right: Math.ceil(Math.max(...xs2)),
+      top: Math.floor(Math.min(...ys2)),
+      bottom: Math.ceil(Math.max(...ys2))
     }
-    console.log(rect2, pa, pb, pc)
     return {
       w: rect2.right - rect2.left,
       h: rect2.bottom - rect2.top,
@@ -135,19 +133,58 @@ const outline = [
   { x: 800, y: 50, z: 0 },
   { x: 1000, y: 250, z: 0 },
   { x: 900, y: 450, z: 0 },
-  { x: 615, y: 505, z: 0 }
+  { x: 665, y: 505, z: 0 }
 ]
 const hratio = 3 / 5
-let count = 0
 const stairs = [
   [{ x: 650, y: 500 }, { x: 670, y: 440 }],
   [{ x: 680, y: 430 }, { x: 770, y: 400 }],
   [{ x: 770, y: 400 }, { x: 700, y: 190 }]
 ].map(ps => ps.map(({ x, y }) => ({ x, y, z: (500 - y) * hratio })))
+const stairs2 = stairs.map(ps => ps.map(({ x, y }) => {
+  const dx = ps[1].x - ps[0].x
+  const dy = ps[1].y - ps[0].y
+  const dr = Math.hypot(dx, dy) / Math.sqrt(250)
+  let lx = -Math.round(dy / dr)
+  let ly = +Math.round(dx / dr)
+  return {
+    x: x + lx,
+    y: y + ly,
+    z: (500 - y) * hratio
+  }
+}))
+
 console.log(stairs)
+console.log(stairs2)
+let selectorCount = 0
+function nextSelector() {
+  return `#view>i:nth-child(${++selectorCount})`
+}
 const center = { x: 250, y: 250, z: 250 * hratio }
 const cs = [stairs[2][1], stairs[1][1], stairs[1][0], stairs[0][1], ...outline.slice(0, 5)]
 for (let i = 0; i < cs.length - 1; i++) {
-  console.log(cs[i], cs[i+1], center)
-  polygon(cs[i], cs[i+1], center, `#view>i:nth-child(${++count})`)
+  polygon(cs[i], cs[i+1], center, nextSelector())
 }
+const center2 = stairs[2][1]
+const center3 = stairs2[2][1]
+polygon(outline[4], center2, center, nextSelector())
+polygon(outline[4], outline[5], center2, nextSelector())
+polygon(outline[5], outline[6], center2, nextSelector())
+polygon(center3, outline[6], center2, nextSelector())
+polygon(center3, outline[6], outline[7], nextSelector())
+polygon(center3, outline[7], stairs2[2][0], nextSelector())
+polygon(outline[8], outline[7], stairs2[2][0], nextSelector())
+polygon(outline[8], stairs2[1][1], stairs2[2][0], nextSelector())
+polygon(outline[8], stairs2[1][1], stairs2[1][0], nextSelector())
+polygon(outline[8], outline[9], stairs2[1][0], nextSelector())
+
+polygon(stairs[0][0], stairs[0][1], stairs2[0][0], nextSelector())
+polygon(stairs2[0][1], stairs[0][1], stairs2[0][0], nextSelector())
+polygon(stairs[0][1], stairs2[0][1], stairs[1][0], nextSelector())
+polygon(stairs[1][0], stairs[1][1], stairs2[1][0], nextSelector())
+polygon(stairs2[1][1], stairs[1][1], stairs2[1][0], nextSelector())
+polygon(stairs2[1][1], stairs[1][1], stairs2[2][0], nextSelector())
+polygon(stairs[2][0], stairs[2][1], stairs2[2][0], nextSelector())
+polygon(stairs2[2][1], stairs[2][1], stairs2[2][0], nextSelector())
+
+
