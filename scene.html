@@ -1,0 +1,159 @@
+<style>
+#scene{
+  position:absolute;
+  left: 0;
+  top: 0;
+  width: 1024px;
+  height: 768px;
+  box-shadow: 0 0 1px black;
+  overflow: hidden;
+  perspective: 2000px;
+}
+#view{
+  position: absolute;
+  left: -512px;
+  top: -512px;
+  width: 2048px;
+  height: 2048px;
+  transform-style: preserve-3d;
+  background:#ccc;
+  animation: camera 20s linear 0s infinite;
+}
+#bottom{
+  position:absolute;
+  left:512px;top:512px;
+  width:1024px;
+  height:1024px;
+  border-top-left-radius: 100%;
+  border-bottom-right-radius: 80%;
+  background:silver;
+  transform:scaleY(0.9)skewX(30deg)rotate(45deg);
+}
+#edge{
+  position:absolute;
+  left:512px;top:512px;
+  width:1024px;
+  height:1024px;
+  border-top-left-radius: 100%;
+  border-bottom-right-radius: 60%;
+  background:silver;
+  transform:scaleZ(0.6)rotateX(90deg)skewX(20deg)rotate(45deg);
+}
+</style>
+<script>
+function round(v) { return Math.round(v * 100) / 100}
+const styles = []
+;(() => {
+  const frames = []
+  for ( let i = 0; i <= 100; i+= 2) {
+    const t = i / 100
+    const th = 2 * Math.PI * t
+    frames.push(`${i}%{transform: rotateX(${round(70 + 5 * Math.cos(th))}deg) rotateZ(${round(25 * Math.sin(th))}deg) translate(${round(-Math.sin(th)*200)}px,-800px);}`)
+  }
+  const style = document.createElement('style')
+  styles.push('@keyframes camera{', ...frames, '}')
+})()
+function addZPole(p, h, color) {
+  const el = document.createElement('i')
+  const div = document.querySelector('#items')
+  div.appendChild(el)
+  styles.push(`#items i:nth-child(${div.children.length}){
+    position:absolute;
+    left:-1px;
+    top:0;
+    width: 2px;
+    height: ${h}px;
+    background:${color};
+    transform-origin:50% 0;
+    transform:translate3d(${round(p.x)}px,${round(p.y)}px,${round(p.z)}px)rotateX(90deg);
+  }`)
+}
+function addLine(p1, p2, color, lw = 2) {
+  const len3 = Math.hypot(p2.x - p1.x, p2.y - p1.y, p2.z - p1.z)
+  const el = document.createElement('i')
+  const div = document.querySelector('#items')
+  div.appendChild(el)
+  const len2 = Math.hypot(p2.x - p1.x, p2.y - p1.y)
+  const thz = Math.atan2(p2.z - p1.z, len2)
+  const th = Math.atan2(p2.y - p1.y, p2.x - p1.x)
+  const c = {
+    x: (p1.x + p2.x) / 2,
+    y: (p1.y + p2.y) / 2,
+    z: (p1.z + p2.z) / 2
+  }
+  styles.push(`#items i:nth-child(${div.children.length}){
+    position:absolute;
+    left:${-len3 / 2}px;
+    top:-${lw / 2}px;
+    width: ${round(len3)}px;
+    height: ${lw}px;
+    background:${color};
+    transform:translate3d(${round(c.x)}px,${round(c.y)}px,${round(c.z)}px)rotateZ(${round(th * 180 / Math.PI)}deg)rotateY(${round(-thz * 180 / Math.PI)}deg);
+  }`)
+}
+function applyStyles() {
+  const style = document.createElement('style')
+  style.textContent = styles.join('\n')
+  document.head.appendChild(style)
+}
+function mixPoint(a, b, t) {
+  const s = 1 - t
+  return { x: a.x * s + t * b.x, y: a.y * s + t * b.y, z: a.z * s + t * b.z }
+}
+onload = () => {
+  const coords = [
+    { x: 1400, y: 1350, z: 0 },
+    { x: 1410, y: 1250, z: 80 },
+    { x: 1480, y: 1200, z: 120 },
+    { x: 1450, y: 1100, z: 200 }
+  ]
+  const coords2 = [
+    { x: 1420, y: 1350, z: 0 },
+    { x: 1428, y: 1263, z: 80 },
+    { x: 1500, y: 1218, z: 120 },
+    { x: 1470, y: 1100, z: 200 }
+  ]
+  ;[coords, coords2].forEach(coords => {
+    const points = []
+    for (let i = 0; i < 3; i++) {
+      const a = coords[i]
+      const b = coords[i + 1]
+      const len = Math.hypot(b.x - a.x, b.y - a.y)
+      const n = Math.ceil(len / 20)
+      for (let j = 0; j < n + (i == 2 ? 1 : 0); j++) {
+        points.push(mixPoint(a, b, j / n))
+      }
+    }
+    points.push(coords[3])
+    points.forEach(p => addZPole(p, 16, '#aaa'))
+    for (let i = 0; i < points.length - 1; i++) {
+      addLine(...[points[i], points[i + 1]].map(a => ({ ...a, z: a.z + 12 })), '#aaa')
+    }
+  })
+  for (let i = 0; i < 3; i++) {
+    const a1 = coords[i]
+    const a2 = coords[i + 1]
+    const b1 = coords2[i]
+    const b2 = coords2[i + 1]
+    const len = (Math.hypot(a2.x - a1.x, a2.y - a1.y) + Math.hypot(b2.x - b1.x, b2.y - b1.y)) / 2
+    const n = Math.ceil(len / 4)
+    for (let j = 0; j < n + (i == 2 ? 1 : 0); j++) {
+      const t = j / n
+      addLine(
+        mixPoint(a1, a2, t),
+        mixPoint(b1, b2, t),
+        '#ccc',
+        4
+      )
+    }
+  }
+  applyStyles()
+}
+</script>
+<div id='scene'>
+  <div id='view'>
+    <div id='bottom'></div>
+    <div id='edge'></div>
+    <div id='items'></div>
+  </div>
+</div>
