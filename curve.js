@@ -1,6 +1,6 @@
 const curveStyles = []
 const curveBackgrounds = []
-
+let curveColor = 'red'
 function solve2(a, b, c, d, x, y) {
   const det = a * d - b * c
   return [(d * x - b * y) / det, (a * y - c * x) / det]
@@ -171,7 +171,7 @@ function addLineCap({ x, y }, w) {
       borderRadius: '50%',
       transform: `translate(${lx - Math.floor(lx)}px,${ly - Math.floor(ly)}px)`,
       border: 'none',
-      background: 'red'
+      background: curveColor
     }
   )
   addCircleBackground(x - w / 2, y - w / 2, w, w, x, y, w / 2)
@@ -250,7 +250,7 @@ function addLineWithCap({ x, y, length, th }, w){
       height: w,
       borderRadius: `${w / 2}px`,
       transform: `translate(${round(lx - Math.floor(lx))}px,${round(ly - Math.floor(ly))}px)rotate(${round(th * 180 / Math.PI, 1000)}deg)`,
-      background: 'red',
+      background: curveColor,
       border: 'none',
     }
   )
@@ -286,7 +286,7 @@ function addLine({ x, y, length, th }, w, cap = false){
       width,
       height: w,
       transform: `translate(${round(lx - Math.floor(lx))}px,${round(ly - Math.floor(ly))}px)rotate(${round(th * 180 / Math.PI, 1000)}deg)`,
-      background: 'red',
+      background: curveColor,
       border: 'none',
     }
   )
