@@ -43,8 +43,8 @@
 #cat1 i,#cat2 i{position:absolute;overflow:hidden;}
 #cat1 i:before,#cat2 i:before{content:'';position:absolute;box-sizing:border-box;border:0px solid #dcb;transform-origin: center;}
 #cat1,#cat2{transform-origin:0 0;}
-#cat1{transform:translate3d(600px,1240px,350px)rotateX(-45deg)scale(0.7)}
-#cat2{transform:translate3d(600px,1240px,350px)rotateX(-45deg)scale(0.7)translate(290px,250px)rotateZ(-5deg)rotateY(-10deg)rotateZ(5deg)translate(-290px,-250px)}
+#cat1{transform:translate3d(600px,1240px,355px)rotateX(-45deg)scale(0.7)}
+#cat2{transform:translate3d(600px,1240px,355px)rotateX(-45deg)scale(0.7)translate(290px,250px)rotateZ(5deg)rotateY(-15deg)rotateZ(-5deg)translate(-290px,-250px)}
 </style>
 <script>
 curveColor='#dcb'
@@ -56,6 +56,7 @@ const styles = []
     const t = i / 100
     const th = 2 * Math.PI * t
     frames.push(`${i}%{transform: rotateX(${round(70 + 5 * Math.cos(th))}deg) rotateZ(${round(25 * Math.sin(th))}deg) translate(${round(-Math.sin(th)*200)}px,-800px);}`)
+    // frames.push(`${i}%{transform: rotateX(0deg) rotateZ(${round(25 * Math.sin(th))}deg) translate(${round(-Math.sin(th)*200)}px,-600px);}`)
   }
   const style = document.createElement('style')
   styles.push('@keyframes camera{', ...frames, '}')
@@ -112,16 +113,16 @@ onload = () => {
     { x: 1100, y: 1580, z: 0 },
     { x: 1110, y: 1540, z: 50 },
     { x: 1200, y: 1510, z: 60 },
-    { x: 1340, y: 1360, z: 150 },
-    { x: 1330, y: 1250, z: 240 },
+    { x: 1430, y: 1250, z: 150 },
+    { x: 1380, y: 1180, z: 240 },
     { x: 1310, y: 1100, z: 320 },
   ]
   const coords2 = [
     { x: 1120, y: 1576, z: 0 },
     { x: 1127, y: 1549, z: 50 },
     { x: 1210, y: 1520, z: 60 },
-    { x: 1362, y: 1368, z: 150 },
-    { x: 1350, y: 1250, z: 240 },
+    { x: 1450, y: 1250, z: 150 },
+    { x: 1393, y: 1170, z: 240 },
     { x: 1330, y: 1100, z: 320 },
   ]
   ;[coords1, coords2].forEach(coords => {
@@ -177,9 +178,10 @@ function addCat() {
   addPath([{x:660,y:360},{x:620,y:380},{x:550,y:390},{x:540,y:450},{x:650,y:464},{x:703,y:364}],lineWidth,true)
   // back
   addPath([{x:300,y:340},{x:394,y:300},{x:532,y:297},{x:592,y:240},{x:671,y:240}],lineWidth)
-  parentSelector = '#cat2'
   // back leg
   addPath([{x:398,y:470},{x:475,y:450},{x:494,y:390},{x:410,y:373},{x:378,y:420},{x:368,y:476},{x:353,y:589},{x:453,y:708},{x:530,y:635},{x:463,y:562}],lineWidth)
+  parentSelector = '#cat2'
+  // tail leg
   addPath([{x:275,y:529},{x:257,y:606},{x:294,y:685}],lineWidth)
   addPath([{x:182,y:516},{x:139,y:566},{x:105,y:615}],lineWidth)
   // tail
